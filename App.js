@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Text, View, StyleSheet, Image } from "react-native";
 import { Camera, CameraView, useCameraPermissions } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
-import Button from "./src/components/Button.js";
+import Button from "./src/components/Button";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -36,8 +38,27 @@ export default function App() {
       }
     }
   };
+  // Function to pick image from local device
+  const pickImage = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
 
-  // Function to save the take picture to the media library
+      console.log(result);
+
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.log(error, "Error to pick image");
+    }
+  };
+
+  // Function to save the taken picture to the media library
   const savePicture = async () => {
     if (image) {
       try {
@@ -66,58 +87,66 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
-      {!image ? (
-        <CameraView
-          style={styles.camera}
-          ref={cameraRef}
-          flash={flash}
-          facing={facing}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              padding: 20,
-             // backgroundColor:"#f1f1f1"
-            }}
-          >
-            <Button toggleIcon="camera-reverse-outline" onPress={toggleCameraFacing} />
-            <Button
-              icon="flash"
-              color={flash === "off" ? "#f1f1f1" : "#ef9c66"}
-              onPress={toggleFlashMode}
-            />
-          </View>
-        </CameraView>
-      ) : (
-        <Image source={{ uri: image }} style={styles.camera} />
-      )}
-      {image ? (
+    <SafeAreaProvider>
+      <View style={styles.container}>
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "space-around",
-            paddingHorizontal: 20,
+            justifyContent: "space-between",
+            padding: 20,
           }}
         >
           <Button
-            title={"Re-take"}
-            icon="retweet"
-            onPress={() => setImage(null)}
-          />
-          <Button title={"Save"} icon="check" onPress={savePicture} />
-        </View>
-      ) : (
-        <View>
-          <Button
-            title={"Take a picture"}
-            icon="camera"
-            onPress={takePicture}
+            icon="flash"
+            color={flash === "off" ? "#f1f1f1" : "#ef9c66"}
+            onPress={toggleFlashMode}
           />
         </View>
-      )}
-    </View>
+        {!image ? (
+          <CameraView
+            style={styles.camera}
+            ref={cameraRef}
+            flash={flash}
+            facing={facing}
+          ></CameraView>
+        ) : (
+          <Image source={{ uri: image }} style={styles.camera} />
+        )}
+        {image ? (
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              paddingHorizontal: 20,
+            }}
+          >
+            <Button
+              title={"Re-take"}
+              icon="retweet"
+              onPress={() => setImage(null)}
+            />
+            <Button title={"Save"} icon="check" onPress={savePicture} />
+          </View>
+        ) : (
+          <View style={styles.takePictureContainer}>
+            <Button
+              onPress={pickImage}
+              title={"Album"}
+            />
+             {/* {image && <Image source={{ uri: image }} style={styles.camera} />} */}
+          
+            <Button
+              onPress={takePicture}
+              icon="camera"
+            />
+              <Button
+            toggleIcon="camera-reverse-outline"
+            onPress={toggleCameraFacing}
+          />
+          </View>
+        )}
+      </View>
+    </SafeAreaProvider>
   );
 }
 
@@ -128,9 +157,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingBottom: 20,
   },
-  image: {},
+  image: {
+    width: 200,
+    height: 200,
+  },
   camera: {
     flex: 1,
     borderRadius: 20,
   },
+  takePictureContainer: {
+    marginHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    alignContent: "center",
+    justifyContent: "space-between",
+    marginTop: 30,
+    marginBottom: 10,
+  },
+
 });
