@@ -2,7 +2,7 @@ import * as React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
-
+//common button
 export default function Button({ title, onPress, icon, color, toggleIcon }) {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
