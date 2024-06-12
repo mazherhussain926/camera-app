@@ -37,7 +37,7 @@ export default function App() {
     }
   };
 
-  // Function to save the taken picture to the media library
+  // Function to save the take picture to the media library
   const savePicture = async () => {
     if (image) {
       try {
