@@ -1,25 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Text, View, StyleSheet, Image } from "react-native";
+import Slider from '@react-native-community/slider';
 import { Camera, CameraView, useCameraPermissions } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import Button from "./src/components/Button";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 
-export default function App() {
+export default function App(): React.Component {
   const [permission, requestPermission] = useCameraPermissions();
   const [image, setImage] = useState(null);
-  const [facing, setFacing] = useState("back");
-  const [flash, setFlash] = useState("off");
+  const [facing, setFacing] = useState<string>("back");
+  const [flash, setFlash] = useState<string>("off");
+  const[zoom,setZoom] =useState<number>(0) 
+
   const cameraRef = useRef(null);
 
   // Request camera and media library permissions when the component mounts
   useEffect(() => {
     (async () => {
       try {
-        MediaLibrary.requestPermissionsAsync();
+        await MediaLibrary.requestPermissionsAsync();
         const cameraStatus = await Camera.requestCameraPermissionsAsync();
-        requestPermission(cameraStatus.status === "granted");
+        if (cameraStatus.status === "granted") {
+          requestPermission(); // Call without any arguments
+        }
       } catch (err) {
         console.log(err);
       }
@@ -108,11 +113,24 @@ export default function App() {
             ref={cameraRef}
             flash={flash}
             facing={facing}
-          ></CameraView>
+            isPinchToZoomEnabled={true}
+            zoom={zoom}
+          >
+             <Slider
+              style={styles.zoomSlider}
+              minimumValue={0}
+              maximumValue={1}
+              value={zoom}
+              onValueChange={(value) => setZoom(value)}
+            />
+          </CameraView>
+          
+          
         ) : (
           <Image source={{ uri: image }} style={styles.camera} />
         )}
         {image ? (
+          
           <View
             style={{
               flexDirection: "row",
@@ -120,6 +138,7 @@ export default function App() {
               paddingHorizontal: 20,
             }}
           >
+             
             <Button
               title={"Re-take"}
               icon="retweet"
@@ -128,21 +147,16 @@ export default function App() {
             <Button title={"Save"} icon="check" onPress={savePicture} />
           </View>
         ) : (
+
           <View style={styles.takePictureContainer}>
+            <Button onPress={pickImage} title={"Album"} />
+            {/* {image && <Image source={{ uri: image }} style={styles.camera} />} */}
+
+            <Button onPress={takePicture} icon="camera" />
             <Button
-              onPress={pickImage}
-              title={"Album"}
+              toggleIcon="camera-reverse-outline"
+              onPress={toggleCameraFacing}
             />
-             {/* {image && <Image source={{ uri: image }} style={styles.camera} />} */}
-          
-            <Button
-              onPress={takePicture}
-              icon="camera"
-            />
-              <Button
-            toggleIcon="camera-reverse-outline"
-            onPress={toggleCameraFacing}
-          />
           </View>
         )}
       </View>
@@ -164,6 +178,11 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
     borderRadius: 20,
+    justifyContent:"flex-end"
+  },
+  zoomSlider:{
+      width: "100%",
+      height: 40,
   },
   takePictureContainer: {
     marginHorizontal: 10,
@@ -174,5 +193,4 @@ const styles = StyleSheet.create({
     marginTop: 30,
     marginBottom: 10,
   },
-
 });
